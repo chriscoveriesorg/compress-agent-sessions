@@ -17,7 +17,7 @@ Companion projects in the same tooling family. They are separate tools; links do
 not install or run anything automatically:
 
 - **[Foldy](https://github.com/chriscoveries/foldy)** *(private; access required)*: local-first filesystem indexing, duplicate review and disk-space reporting.
-- **[Applesauce](https://github.com/chriscoveriesorg/applesauce)** : macOS HFS+/APFS transparent file compression; available as this utility's compression backend.
+- **[Applesauce](https://github.com/chriscoveriesorg/applesauce)**: macOS transparent-compression fork investigating LZRAVEN/APFS support; existing LZFSE, LZVN and ZLIB operations remain available as a compression backend.
 - **[ZGX](https://github.com/chriscoveriesorg/zgx)** *(private; access required)*: agent-oriented local metasearch across literal, indexed and optional semantic sources.
 
 ## Why
