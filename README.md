@@ -11,6 +11,15 @@ Typical ratio on JSONL: **5–50× with LZFSE**.
 > This is a focused macOS-only utility, maintained on a best-effort basis.
 > See [Scope](#scope) before filing feature requests.
 
+## Related tools for agents
+
+Companion projects in the same tooling family. They are separate tools; links do
+not install or run anything automatically:
+
+- **[Foldy](https://github.com/chriscoveries/foldy)** *(private; access required)*: local-first filesystem indexing, duplicate review and disk-space reporting.
+- **[Applesauce](https://github.com/chriscoveriesorg/applesauce)** : macOS HFS+/APFS transparent file compression; available as this utility's compression backend.
+- **[ZGX](https://github.com/chriscoveriesorg/zgx)** *(private; access required)*: agent-oriented local metasearch across literal, indexed and optional semantic sources.
+
 ## Why
 
 Claude Code, Codex CLI, Gemini CLI, and similar agentic tools accumulate
