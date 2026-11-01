@@ -5,6 +5,23 @@ All notable changes to `compress-agent-sessions` will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Experimental LZRAVEN, LZMESH and LZBITMAP compression requests require the
+  selected Applesauce backend to pass `capabilities --json --require-native`
+  for that exact codec before scanning or modifying session files. Unsupported
+  codecs, older Applesauce binaries and other backends fail without fallback.
+  LZFSE remains the default and does not require the new capability command.
+- Portable mocked capability-gate tests, also included in the macOS smoke suite.
+
+### Fixed
+
+- Algorithm names are normalized and validated before backend dispatch. The
+  existing `compression_tool` estimator explicitly refuses experimental names
+  instead of conflating buffer-codec availability with native APFS support.
+
 ## [0.3.3] — 2026-05-08
 
 Four LOW polish fixes from Claude review #3 on v0.3.2 (verdict: LGTM with minor follow-ups).
