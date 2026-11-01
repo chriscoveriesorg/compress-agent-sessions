@@ -5,6 +5,9 @@ readonly TEST_DIR="${0:A:h}"
 readonly REPO_ROOT="${TEST_DIR:h}"
 readonly BIN="${REPO_ROOT}/bin/compress-agent-sessions"
 
+# Portable capability-gate cases run here too, before native APFS smoke tests.
+zsh "${TEST_DIR}/capabilities.zsh"
+
 readonly FIXTURE_ROOT="$(mktemp -d -t cas-smoke.XXXXXX)"
 readonly LEDGER_ROOT="${FIXTURE_ROOT}/ledger"
 readonly FAKE_CODEX="${FIXTURE_ROOT}/fake-codex-sessions"

@@ -17,8 +17,14 @@ Companion projects in the same tooling family. They are separate tools; links do
 not install or run anything automatically:
 
 - **[Foldy](https://github.com/chriscoveries/foldy)** *(private; access required)*: local-first filesystem indexing, duplicate review and disk-space reporting.
-- **[Applesauce](https://github.com/chriscoveriesorg/applesauce)**: macOS transparent-compression fork investigating LZRAVEN/APFS support; existing LZFSE, LZVN and ZLIB operations remain available as a compression backend.
+- **[Applesauce](https://github.com/chriscoveriesorg/applesauce)**: macOS transparent-compression fork investigating LZRAVEN/LZMESH and native APFS support; existing LZFSE, LZVN and ZLIB operations remain available as a compression backend.
 - **[ZGX](https://github.com/chriscoveriesorg/zgx)** *(private; access required)*: agent-oriented local metasearch across literal, indexed and optional semantic sources.
+
+The [modern-codec integration plan](docs/experimental-lzraven.md) keeps the
+roles separate: Applesauce owns codec and filesystem support, this script
+selects cold files, and search clients keep reading the logical files at
+their existing paths. A working LZRAVEN buffer codec alone does not enable
+transparent APFS compression.
 
 ## Why
 
@@ -109,6 +115,16 @@ Algorithms (via `--algorithm`):
 | `LZFSE` (default) | ~50× | fastest | yes, for new work |
 | `ZLIB` | slightly higher at level 9 | ~3× slower than LZFSE | only if you need maximum ratio |
 | `LZVN` | in between | fast | no (LZFSE dominates) |
+
+This fork also recognizes `LZRAVEN`, `LZMESH` and `LZBITMAP` for experimental
+`compress` requests. Before scanning any session files, it requires the
+selected Applesauce backend to pass
+`applesauce capabilities --json --require-native <lowercase-codec>`.
+Unsupported codecs, older Applesauce binaries and other backends fail without
+fallback, including with `--dry-run`. LZRAVEN/LZMESH native support remains
+unverified; merely upgrading macOS does not pass this gate. The existing
+`estimate` backend does not support these experimental algorithms.
+See the [capability contract](docs/experimental-lzraven.md#capability-preflight).
 
 ## Ledger
 
@@ -228,6 +244,12 @@ closed and reopened once they're added.
   compression ratio is tuned to text/JSONL in the estimator sampling.
 
 ## Testing
+
+Portable mocked capability-gate tests (no native compression performed):
+
+    zsh tests/capabilities.zsh
+
+Full macOS native-compression smoke tests, including those portable cases:
 
     zsh tests/smoke.zsh
 

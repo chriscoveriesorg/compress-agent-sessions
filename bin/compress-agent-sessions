@@ -75,6 +75,8 @@ Options:
   --age-days N              Only files older than N days (default: 14)
   --tool TOOL               applesauce|afsctool|ditto|auto (default: auto)
   --algorithm ALGO          LZFSE|LZVN|ZLIB (default: LZFSE)
+                            Experimental compress only: LZRAVEN|LZMESH|LZBITMAP
+                            Requires Applesauce to attest native filesystem support
   --level N                 1..9 (default: 9)
   --include SCOPE           claude|codex|gemini|all (default: all; repeatable)
   --exclude GLOB            Skip files matching glob (repeatable)
@@ -100,6 +102,27 @@ USAGE
 }
 
 version() { printf '%s %s\n' "$SCRIPT_NAME" "$SCRIPT_VERSION" ; }
+
+# Accept only the documented codec names; never pass an arbitrary value to a
+# backend that might ignore it or interpret it differently. Names are normalized
+# so the capability gate and the compressor always refer to the same codec.
+validate_algorithm() {
+  ALGORITHM="${(U)ALGORITHM}"
+  case "$ALGORITHM" in
+    LZFSE|LZVN|ZLIB|LZRAVEN|LZMESH|LZBITMAP) return 0 ;;
+    *)
+      log_error "unknown --algorithm value: $ALGORITHM (LZFSE|LZVN|ZLIB|LZRAVEN|LZMESH|LZBITMAP)"
+      return 64
+      ;;
+  esac
+}
+
+algorithm_needs_capability_gate() {
+  case "${(L)ALGORITHM}" in
+    lzraven|lzmesh|lzbitmap) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 # --- platform / decmpfs availability gate ------------------------------------
 # Hard-fails on non-Darwin OR Darwin-shaped hosts where decmpfs is not actually
@@ -625,6 +648,15 @@ cmd_list() {
 # --- subcommand: estimate ----------------------------------------------------
 
 cmd_estimate() {
+  # This estimator uses compression_tool, not Applesauce. A buffer-codec ratio
+  # is not proof of native APFS support, and the two encoders need not have the
+  # same algorithm surface. Do not route experimental names through that path.
+  if algorithm_needs_capability_gate; then
+    log_error "estimate does not support --algorithm $ALGORITHM; it uses compression_tool, not the Applesauce native backend"
+    log_error "  Use the Applesauce codec experiment for buffer benchmarks; no session files were changed."
+    return 1
+  fi
+
   local -a roots
   roots=( ${(f)"$(resolve_roots)"} ) || return 1
 
@@ -752,6 +784,32 @@ detect_tool() {
   esac
 }
 
+# The Applesauce fork owns the native decmpfs capability decision. Its
+# --require-native gate exits zero only for a writable codec with known decmpfs
+# types. Older binaries reject the flag, and unsupported modern codecs fail
+# closed. A working Apple Compression buffer API is deliberately insufficient.
+# This is called before scanning or modifying any session file, even for dry-run.
+require_native_algorithm_support() {
+  local tool="$1" codec="${(L)ALGORITHM}" capability_report capability_rc
+  algorithm_needs_capability_gate || return 0
+
+  if [[ "$tool" != "applesauce" ]]; then
+    log_error "--algorithm $ALGORITHM requires the Applesauce native capability gate; selected backend: $tool"
+    log_error "  No session files were changed and no fallback was attempted. Use --tool applesauce with a compatible fork."
+    return 1
+  fi
+
+  if capability_report=$(applesauce capabilities --json --require-native "$codec" 2>&1); then
+    return 0
+  else
+    capability_rc=$?
+    log_error "Applesauce refused native $ALGORITHM compression (capability check exit $capability_rc)"
+    [[ -z "$capability_report" ]] || log_error "  $capability_report"
+    log_error "  Apple buffer-codec support is not native APFS support. No session files were changed; no fallback was attempted."
+    return 1
+  fi
+}
+
 physical_bytes() {
   local blocks
   blocks=$(stat -f '%b' -- "$1" 2>/dev/null) || { echo 0; return; }
@@ -876,6 +934,7 @@ cmd_compress() {
   _loud_chflags_warning
   local tool
   tool=$(detect_tool) || return 1
+  require_native_algorithm_support "$tool" || return 1
 
   local -a roots
   roots=( ${(f)"$(resolve_roots)"} ) || return 1
@@ -1233,6 +1292,7 @@ main() {
   done
 
   TARGET_PATHS=("${positional[@]}")
+  validate_algorithm || return $?
 
   # Platform gate — runs AFTER --help/--version early-return (above) so
   # those still work cross-platform. Runs BEFORE LEDGER_DIR initialization
