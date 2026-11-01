@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The Applesauce backend now passes `--verify` on normal compression so the
+  original logical bytes are checked before its atomic replacement. This
+  strengthens Foldy hash and ZGX search preservation checks at the write
+  boundary, at the cost of extra readback time.
 - Algorithm names are normalized and validated before backend dispatch. The
   existing `compression_tool` estimator explicitly refuses experimental names
   instead of conflating buffer-codec availability with native APFS support.
