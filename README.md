@@ -26,6 +26,11 @@ selects cold files, and search clients keep reading the logical files at
 their existing paths. A working LZRAVEN buffer codec alone does not enable
 transparent APFS compression.
 
+The [four-tool acceptance guide](https://github.com/chriscoveriesorg/applesauce/blob/main/hack/family-integration.md)
+also connects Foldy's hashed inventory and ZGX search receipts to an executable
+before/after content contract. The Applesauce backend requests `--verify` on
+every file write; it does not change the native Raven/Mesh safety gate.
+
 ## Why
 
 Claude Code, Codex CLI, Gemini CLI, and similar agentic tools accumulate

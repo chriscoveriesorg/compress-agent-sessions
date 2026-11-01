@@ -852,7 +852,10 @@ _run_tool_capturing_stderr() {
 
 _compress_with_applesauce() {
   local file="$1" algo_lc="${(L)ALGORITHM}" _stmp _rc
-  _run_tool_capturing_stderr _stmp applesauce compress -c "$algo_lc" -l "$LEVEL" --quiet "$file"
+  # Verify the logical bytes before Applesauce atomically replaces the source.
+  # This is particularly important for cold agent logs, which must remain
+  # byte-for-byte readable by ZGX and other tools after storage changes.
+  _run_tool_capturing_stderr _stmp applesauce compress -c "$algo_lc" -l "$LEVEL" --verify --quiet "$file"
   _rc=$?
   if (( _rc != 0 )); then
     if [[ -s "$_stmp" ]]; then

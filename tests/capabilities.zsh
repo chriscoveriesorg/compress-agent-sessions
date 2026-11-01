@@ -206,4 +206,21 @@ cap_run cmd_restore
   || cap_fail "restore was incorrectly gated on modern compression capability"
 cap_pass "restore remains independent of modern compression capability"
 
+# Verify the *backend* call itself: transparent compression must use the
+# Applesauce readback check before atomic replacement. This is a mock-only
+# test; no compressor, fixture file, or APFS decoder is touched.
+_run_tool_capturing_stderr() {
+  local outvar="$1"; shift
+  printf -v "$outvar" '%s' "$CAP_FIXTURE_ROOT/no-stderr"
+  printf '%s\n' "$*" >> "$CAP_TRACE"
+  return 0
+}
+ALGORITHM=LZFSE
+LEVEL=9
+cap_run _compress_with_applesauce "$CAP_FIXTURE_ROOT/generated.jsonl"
+(( cap_status == 0 )) \
+  && [[ "$(< "$CAP_TRACE")" == "applesauce compress -c lzfse -l 9 --verify --quiet $CAP_FIXTURE_ROOT/generated.jsonl" ]] \
+  || cap_fail "Applesauce backend did not request verified atomic replacement"
+cap_pass "every Applesauce session compression requests readback verification"
+
 printf '[capabilities] %d portable assertions passed; no APFS writes performed\n' "$cap_passed"
