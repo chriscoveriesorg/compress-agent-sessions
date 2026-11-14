@@ -1,0 +1,22 @@
+# Conversion proposal only. Do not enroll before exact full bootstrap proof,
+# independent source review and the coupled signed C3 config/workflow WINDOW.
+[merge_batch.compress-agent-sessions]
+repository = "chriscoveriesorg/compress-agent-sessions"
+actions_app_id = 15368
+max_members = 4
+deadline_seconds = 21600
+covers_full_proof = false
+dependencies = [
+  ".github/actions/ci-tier/action.yml",
+  ".github/ci/setup.sh",
+]
+
+[[merge_batch.compress-agent-sessions.workflows]]
+filename = "portable-capabilities.yml"
+[merge_batch.compress-agent-sessions.workflows.jobs]
+portable-capabilities = [
+  "pinned tier setup",
+  "Install zsh",
+  "Check script syntax",
+  "Test mocked capability contract",
+]
