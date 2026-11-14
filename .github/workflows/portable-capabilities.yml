@@ -2,21 +2,30 @@ name: Portable capability contract
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches: ["batch/**"]
 
 permissions:
   contents: read
 
 jobs:
   portable-capabilities:
+    # The whole contract is one bounded zsh check (~2 min), so quick and full
+    # run identical steps — the tiers differ only in when they run. Pull
+    # requests take the quick tier; only a canonical batch/** push runs full.
+    # `main` pushes and workflow_dispatch no longer trigger this workflow.
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: pinned tier setup
+        uses: ./.github/actions/ci-tier
+        with:
+          tier: ${{ github.event_name == 'pull_request' && 'quick' || 'full' }}
+          setup-script: .github/ci/setup.sh
       - name: Install zsh
         run: |
           sudo apt-get update
